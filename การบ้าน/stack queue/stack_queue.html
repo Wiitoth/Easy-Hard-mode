@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stack & Queue UI</title>
+    <style>
+        body{
+    font-family: Arial;
+    text-align:center;
+    background-color: #3498db;
+    margin:0;
+    padding:30px;
+}
+
+h1{
+    color:white;
+    margin-bottom:20px;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    gap:40px;
+    margin-top:20px;
+}
+
+.box-area{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    width:280px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.2);
+}
+
+.section{
+    background:white;
+    padding:15px;
+    border-radius:15px;
+    width:400px;
+    margin:auto;
+    box-shadow:0 8px 20px rgba(0,0,0,0.2);
+}
+
+input{
+    padding:8px;
+    border-radius:6px;
+    border:1px solid #ccc;
+}
+
+button{
+    padding:8px 14px;
+    border:none;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    opacity:0.8;
+}
+
+.stack-box,.queue-box{
+    padding:10px;
+    margin:6px auto;
+    border-radius:8px;
+    width:120px;
+    background:#ecf0f1;
+    border-left:6px solid #3498db;
+    font-weight:bold;
+}
+
+.queue-row{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+}
+
+.info{
+    font-weight:bold;
+    margin-top:10px;
+    font-size:18px;
+}
+
+.top{
+    color:#e74c3c;
+}
+
+.front{
+    color:#27ae60;
+}
+    </style>
+</head>
+    <body>
+    <h1>Stack & Queue</h1>
+    <div class="section">
+        <h2>Insert to Both</h2>
+        <input type="text" id="bothInput" placeholder="Enter value">
+        <button onclick="insertBoth()">Insert Both</button>
+    </div>
+    <div class="container">
+        <!-- STACK -->
+        <div class="box-area">
+            <h2>Stack</h2>
+            <input type="text" id="stackInput" placeholder="Enter value"><br>
+            <button onclick="pushValue()">Push</button>
+            <button onclick="popValue()">Pop</button>
+            <button onclick="clearStack()">Clear</button>
+            <div class="info">TOP : <span id="topDisplay">-</span></div>
+            <div id="stackDisplay"></div>
+        </div>
+        <!-- QUEUE -->
+        <div class="box-area">
+            <h2>Queue</h2>
+            <input type="text" id="queueInput" placeholder="Enter value"><br>
+            <button onclick="enqueue()">Enqueue</button>
+            <button onclick="dequeue()">Dequeue</button>
+            <button onclick="clearQueue()">Clear</button>
+            <div class="info">FRONT : <span id="frontDisplay">-</span></div>
+            <div id="queueDisplay" class="queue-row"></div>
+        </div>
+    </div>
+    <script>
+    let stack = [];
+    function displayStack(){
+        let display = document.getElementById("stackDisplay");
+        let topDisplay = document.getElementById("topDisplay");
+        display.innerHTML = "";
+        for(let i = stack.length - 1; i >= 0; i--){
+            let div = document.createElement("div");
+            div.className = "stack-box";
+            div.innerText = stack[i];
+            if(i === stack.length - 1){
+                div.innerText += " ← TOP";
+            }
+            display.appendChild(div);
+        }
+        topDisplay.innerText = stack.length === 0 ? "-" : stack[stack.length - 1];
+    }
+    function pushValue(){
+        let value = document.getElementById("stackInput").value.trim();
+        if(value === "") return alert("Enter value");
+        stack.push(value);
+        displayStack();
+        document.getElementById("stackInput").value = "";
+    }
+    function popValue(){
+        if(stack.length === 0) return alert("Stack is empty");
+        stack.pop();
+        displayStack();
+    }
+    function clearStack(){
+        stack = [];
+        displayStack();
+    }
+    displayStack();
+
+    let queue = [];
+    function displayQueue(){
+        let display = document.getElementById("queueDisplay");
+        let frontDisplay = document.getElementById("frontDisplay");
+        display.innerHTML = "";
+        for(let i = 0; i < queue.length; i++){
+            let div = document.createElement("div");
+            div.className = "queue-box";
+            div.innerText = queue[i];
+            if(i === 0){
+                div.innerText += " ← FRONT";
+            }
+            display.appendChild(div);
+        }
+        frontDisplay.innerText = queue.length === 0 ? "-" : queue[0];
+    }
+    function enqueue(){
+        let value = document.getElementById("queueInput").value;
+        if(value === "") return alert("Enter value");
+        queue.push(value);
+        displayQueue();
+        document.getElementById("queueInput").value = "";
+    }
+    function dequeue(){
+        if(queue.length === 0) return alert("Queue is empty");
+        queue.shift();
+        displayQueue();
+    }
+    function clearQueue(){
+        queue = [];
+        displayQueue();
+    }
+    displayQueue();
+
+    function insertBoth(){
+        let value = document.getElementById("bothInput").value;
+        if(value === "") return alert("Enter value");
+        stack.push(value);
+        queue.push(value);
+        displayStack();
+        displayQueue();
+        document.getElementById("bothInput").value = "";
+    }
+</script>
+</body>
+</html>

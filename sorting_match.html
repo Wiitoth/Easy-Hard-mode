@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Match: Spot the Next Move</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f8fafc; overflow-x: hidden; }
+        .canvas-container { position: relative; border-radius: 0.75rem; border: 2px solid #334155; transition: border-color 0.3s, box-shadow 0.3s; background-color: #1e293b; }
+        .flash-green { animation: flashG 0.5s ease-out; }
+        .flash-red { animation: flashR 0.5s ease-out; }
+        @keyframes flashG { 
+            0% { box-shadow: 0 0 50px #22c55e inset; border-color: #22c55e; } 
+            100% { box-shadow: none; border-color: #334155; } 
+        }
+        @keyframes flashR { 
+            0% { box-shadow: 0 0 50px #ef4444 inset; border-color: #ef4444; } 
+            100% { box-shadow: none; border-color: #334155; } 
+        }
+        .heart { display: inline-block; transition: transform 0.2s, opacity 0.3s; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .heart-lost { opacity: 0.2; transform: scale(0.8); filter: grayscale(1); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+    <nav class="w-full bg-slate-800 border-b border-slate-700 shadow-xl z-20 sticky top-0 py-4 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-6">
+                <h1 class="text-2xl lg:text-3xl font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent transform transition hover:scale-105 shadow-sm">Sorting Match</h1>
+                <div class="flex items-center gap-3">
+                    <select id="modeSelect" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold outline-none ring-1 ring-slate-600 focus:ring-emerald-400 transition cursor-pointer hover:bg-slate-600">
+                        <option value="EasyMode">Easy Mode</option>
+                        <option value="HardMode">Hard Mode</option>
+                    </select>
+                    <select id="algoSelect" class="bg-slate-700 text-white px-3 py-2 rounded-lg font-bold outline-none ring-1 ring-slate-600 focus:ring-cyan-400 transition cursor-pointer hover:bg-slate-600">
+                        <option value="Bubble">Bubble Sort</option>
+                        <option value="Selection">Selection Sort</option>
+                        <option value="Insertion">Insertion Sort</option>
+                        <option value="Quick">Quick Sort</option>
+                        <option value="Merge">Merge Sort</option>
+                        <option value="Heap">Heap Sort</option>
+                    </select>
+                    <button id="startBtn" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white px-6 py-2 rounded-lg font-bold shadow-lg transform active:scale-95 transition tracking-wide text-sm lg:text-base">START GAME</button>
+                    <button id="stopBtn" class="hidden bg-slate-600 hover:bg-slate-500 text-white px-4 py-2 rounded-lg font-bold shadow-lg transform active:scale-95 transition tracking-wide text-sm lg:text-base">STOP</button>
+                </div>
+            </div>
+            <div class="flex gap-6 lg:gap-8 text-xl font-bold bg-slate-900/50 px-6 py-2 rounded-xl border border-slate-700 w-full md:w-auto justify-center shadow-inner">
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] lg:text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Timer</span>
+                    <span id="timerDisplay" class="text-slate-500 text-xl lg:text-2xl font-mono tracking-tighter">--:--</span>
+                </div>
+                <div class="w-px h-10 bg-slate-700 hidden lg:block"></div>
+
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] lg:text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Level</span>
+                    <span id="levelDisplay" class="text-cyan-400 text-xl lg:text-2xl">1</span>
+                </div>
+                <div class="w-px h-10 bg-slate-700 hidden lg:block"></div>
+                <div class="flex flex-col items-center">
+                    <span class="text-[10px] lg:text-xs text-slate-400 uppercase tracking-widest font-semibold mb-1">Score</span>
+                    <span id="scoreDisplay" class="text-yellow-400 text-xl lg:text-2xl">0</span>
+                </div>
+                <div class="w-px h-10 bg-slate-700 hidden lg:block"></div>
+                <div class="flex flex-col items-center">
+                    <span id="highScoreLabel" class="text-[10px] lg:text-xs text-fuchsia-400/80 uppercase tracking-widest font-semibold mb-1">Easy High</span>
+                    <span id="highScoreDisplay" class="text-fuchsia-400 text-xl lg:text-2xl drop-shadow-md">0</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 py-8 flex flex-col items-center gap-6">
+        <div id="statusMsg" class="text-lg lg:text-xl font-bold text-slate-300 bg-slate-800/80 px-8 py-3 rounded-full border border-slate-700 shadow-lg text-center backdrop-blur-sm">
+            Select an algorithm and click Start Game to begin!
+        </div>
+        <div id="algoDescription" class="text-sm font-medium text-slate-400 max-w-2xl text-center italic tracking-wide">
+            Bubble Sort repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.
+        </div>
+        
+        <div class="flex items-center gap-2 w-full justify-center text-[10px] lg:text-sm font-semibold text-slate-400 flex-wrap">
+            <span class="w-2 h-2 lg:w-3 lg:h-3 rounded-full bg-gradient-to-t from-cyan-500 to-blue-400 inline-block"></span> Normal
+            <span class="w-2 h-2 lg:w-3 lg:h-3 rounded-full bg-gradient-to-t from-amber-500 to-yellow-400 inline-block ml-4"></span> Selected
+            <span class="w-2 h-2 lg:w-3 lg:h-3 rounded-full bg-gradient-to-t from-green-500 to-emerald-400 inline-block ml-4"></span> Correct
+        </div>
+
+        <div class="flex flex-col xl:flex-row gap-6 lg:gap-8 w-full justify-center items-center">
+            <!-- Left Canvas -->
+            <div class="flex flex-col items-center gap-2 w-full max-w-[550px]">
+                <h2 class="text-xl lg:text-2xl font-black tracking-wide text-slate-200 uppercase">Current <span class="text-cyan-400">State</span></h2>
+                <div class="canvas-container w-full aspect-[4/3] shadow-2xl p-4 cursor-crosshair hover:border-cyan-500/50 transition-colors pointer-active group" id="leftContainer">
+                    <canvas id="leftCanvas" width="600" height="450" class="w-full h-full object-contain"></canvas>
+                    <div class="absolute inset-0 bg-cyan-500/0 group-hover:bg-cyan-500/5 transition-colors pointer-events-none rounded-xl"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-bold tracking-widest uppercase mt-1">▲ Click the changing bars here ▲</span>
+            </div>
+            
+            <div class="hidden xl:flex text-slate-500 text-4xl mt-10">
+                &rarr;
+            </div>
+
+            <!-- Right Canvas -->
+            <div class="flex flex-col items-center gap-2 w-full max-w-[550px]">
+                <h2 class="text-xl lg:text-2xl font-black tracking-wide text-slate-200 uppercase">Next <span class="text-purple-400">State</span></h2>
+                <div class="canvas-container w-full aspect-[4/3] shadow-2xl p-4 flex items-center justify-center opacity-[0.85] border-slate-600/50" id="rightContainer">
+                    <canvas id="rightCanvas" width="600" height="450" class="w-full h-full object-contain pointer-events-none"></canvas>
+                </div>
+                <span class="text-xs text-slate-600 font-bold tracking-widest uppercase mt-1">Visual Reference Only</span>
+            </div>
+        </div>
+    </main>
+
+    <footer class="w-full bg-slate-900 border-t border-slate-800 py-6 text-center text-slate-400 px-4 mt-auto">
+        <p class="max-w-3xl mx-auto leading-relaxed text-xs lg:text-sm">
+            <strong>How to play:</strong> Compare the <em>Current State</em> with the <em>Next State</em>. Find the exact difference between them. 
+            Click the bar (or pair of bars) on the <span class="text-cyan-400 font-bold cursor-pointer">Current State</span> that are about to change.
+        </p>
+    </footer>
+
+    <script>
+        // Audio System
+        let audioCtx;
+        function initAudio() {
+            if(!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        }
+        function playBeep(freq, type, duration, vol) {
+            if(!audioCtx) return;
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+        function playCorrect() { initAudio(); playBeep(600, 'sine', 0.15, 0.2); setTimeout(() => playBeep(850, 'sine', 0.2, 0.2), 100); }
+        function playLevelComplete() { 
+            initAudio(); 
+            playBeep(400, 'triangle', 0.2, 0.2);
+            setTimeout(() => playBeep(600, 'triangle', 0.2, 0.2), 150);
+            setTimeout(() => playBeep(800, 'triangle', 0.5, 0.2), 300);
+        }
+        function playWrong() { initAudio(); playBeep(200, 'sawtooth', 0.4, 0.2); }
+        function playStep() { initAudio(); playBeep(400, 'sine', 0.05, 0.1); }
+
+        // BGM System (8-bit Procedural Music)
+        function mToF(m) { return m === 0 ? 0 : 440 * Math.pow(2, (m - 69) / 12); }
+        
+        class BattleBGM {
+            constructor(ctx) {
+                this.ctx = ctx;
+                this.isPlaying = false;
+                this.nextNoteTime = 0;
+                this.step = 0;
+                this.tempo = 320; // 16th notes speed
+                // 16-step sequences
+                this.bass = [45,0,45,0,45,45,48,45,  43,0,43,0,43,43,47,43,  41,0,41,0,41,41,45,41,  50,0,50,0,50,52,53,55];
+                this.arp  = [57,60,64,60,57,60,64,60, 55,59,62,59,55,59,62,59, 53,57,60,57,53,57,60,57, 62,65,69,65,62,65,69,65];
+            }
+            start() {
+                if(this.isPlaying) return;
+                this.isPlaying = true;
+                this.step = 0;
+                this.nextNoteTime = this.ctx.currentTime + 0.05;
+                this.scheduler();
+            }
+            stop() {
+                this.isPlaying = false;
+            }
+            playTone(m, type, time, dur, vol) {
+                if(m === 0) return;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type;
+                osc.frequency.value = mToF(m);
+                gain.gain.setValueAtTime(vol, time);
+                gain.gain.exponentialRampToValueAtTime(0.001, time + dur * 0.8);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(time);
+                osc.stop(time + dur);
+            }
+            scheduler() {
+                if (!this.isPlaying) return;
+                while (this.nextNoteTime < this.ctx.currentTime + 0.1) {
+                    const noteDur = 60.0 / this.tempo;
+                    this.playTone(this.bass[this.step % this.bass.length], 'square', this.nextNoteTime, noteDur, 0.04);
+                    this.playTone(this.arp[this.step % this.arp.length], 'square', this.nextNoteTime, noteDur, 0.02);
+                    this.nextNoteTime += noteDur;
+                    this.step++;
+                }
+                setTimeout(() => this.scheduler(), 25);
+            }
+        }
+        let bgm = null;
+        function playBGM() {
+            initAudio();
+            if(!bgm) bgm = new BattleBGM(audioCtx);
+            bgm.start();
+        }
+        function stopBGM() {
+            if(bgm) bgm.stop();
+        }
+
+        // Algorithms Generation
+        function getBubbleSortOps(arr) {
+            let ops = []; let a = [...arr];
+            for(let i=0; i<a.length; i++) {
+                for(let j=0; j<a.length-i-1; j++) {
+                    if(a[j] > a[j+1]) {
+                        ops.push({type:'swap', i:j, j:j+1});
+                        let t=a[j]; a[j]=a[j+1]; a[j+1]=t;
+                    }
+                }
+            }
+            return ops;
+        }
+        function getSelectionSortOps(arr) {
+            let ops = []; let a = [...arr];
+            for(let i=0; i<a.length; i++) {
+                let minIdx = i;
+                for(let j=i+1; j<a.length; j++) { if(a[j] < a[minIdx]) minIdx = j; }
+                if(minIdx !== i) {
+                    ops.push({type:'swap', i:i, j:minIdx});
+                    let t=a[i]; a[i]=a[minIdx]; a[minIdx]=t;
+                }
+            }
+            return ops;
+        }
+        function getInsertionSortOps(arr) {
+            let ops = []; let a = [...arr];
+            for(let i=1; i<a.length; i++) {
+                let j = i;
+                while(j > 0 && a[j-1] > a[j]) {
+                    ops.push({type:'swap', i:j, j:j-1});
+                    let t=a[j]; a[j]=a[j-1]; a[j-1]=t;
+                    j--;
+                }
+            }
+            return ops;
+        }
+        function getQuickSortOps(arr) {
+            let ops = []; let a = [...arr];
+            function qs(low, high) {
+                if(low < high) {
+                    let pi = partition(low, high);
+                    qs(low, pi - 1);
+                    qs(pi + 1, high);
+                }
+            }
+            function partition(low, high) {
+                let pivot = a[high];
+                let i = low - 1;
+                for(let j=low; j<high; j++) {
+                    if(a[j] < pivot) {
+                        i++;
+                        if(i !== j) {
+                            ops.push({type:'swap', i:i, j:j});
+                            let t=a[i]; a[i]=a[j]; a[j]=t;
+                        }
+                    }
+                }
+                if(i+1 !== high) {
+                    ops.push({type:'swap', i:i+1, j:high});
+                    let t=a[i+1]; a[i+1]=a[high]; a[high]=t;
+                }
+                return i+1;
+            }
+            qs(0, a.length-1);
+            return ops;
+        }
+        function getMergeSortOps(arr) {
+            let ops = []; let a = [...arr];
+            function ms(left, right) {
+                if(left >= right) return;
+                let mid = Math.floor((left+right)/2);
+                ms(left, mid);
+                ms(mid+1, right);
+                merge(left, mid, right);
+            }
+            function merge(left, mid, right) {
+                let temp = [];
+                let i = left, j = mid+1;
+                while(i <= mid && j <= right) {
+                    if(a[i] <= a[j]) { temp.push(a[i++]); }
+                    else { temp.push(a[j++]); }
+                }
+                while(i <= mid) temp.push(a[i++]);
+                while(j <= right) temp.push(a[j++]);
+                for(let k=0; k<temp.length; k++) {
+                    // Only register an operation if it visually changes!
+                    if(a[left+k] !== temp[k]) {
+                        ops.push({type:'set', index: left+k, value: temp[k]});
+                        a[left+k] = temp[k];
+                    }
+                }
+            }
+            ms(0, a.length-1);
+            return ops;
+        }
+        function getHeapSortOps(arr) {
+            let ops = []; let a = [...arr];
+            function heapify(n, i) {
+                let largest = i;
+                let l = 2*i + 1, r = 2*i + 2;
+                if(l < n && a[l] > a[largest]) largest = l;
+                if(r < n && a[r] > a[largest]) largest = r;
+                if(largest !== i) {
+                    ops.push({type:'swap', i:i, j:largest});
+                    let t=a[i]; a[i]=a[largest]; a[largest]=t;
+                    heapify(n, largest);
+                }
+            }
+            for(let i=Math.floor(a.length/2)-1; i>=0; i--) heapify(a.length, i);
+            for(let i=a.length-1; i>0; i--) {
+                ops.push({type:'swap', i:0, j:i});
+                let t=a[0]; a[0]=a[i]; a[i]=t;
+                heapify(i, 0);
+            }
+            return ops;
+        }
+
+        function getOpsForAlgo(algoName, arr) {
+            switch(algoName) {
+                case 'Bubble': return getBubbleSortOps(arr);
+                case 'Selection': return getSelectionSortOps(arr);
+                case 'Insertion': return getInsertionSortOps(arr);
+                case 'Quick': return getQuickSortOps(arr);
+                case 'Merge': return getMergeSortOps(arr);
+                case 'Heap': return getHeapSortOps(arr);
+            }
+            return [];
+        }
+
+        // Visualizer Engine
+        class Visualizer {
+            constructor(canvasId) {
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                this.width = this.canvas.width;
+                this.height = this.canvas.height;
+                this.bars = [];
+                this.n = 10;
+                this.totalGap = this.width * 0.1;
+                this.gap = this.totalGap / (this.n + 1);
+                this.bw = (this.width - this.totalGap) / this.n;
+            }
+            init(values) {
+                this.bars = values.map((val, i) => ({
+                    value: val,
+                    targetValue: val,
+                    x: this.getX(i),
+                    targetX: this.getX(i),
+                    color: 'default' 
+                }));
+            }
+            getX(index) {
+                return this.gap + index * (this.bw + this.gap);
+            }
+            // Smoothly apply an operation with animation interpolation
+            applyOp(op) {
+                this.bars.forEach(b => { if(b.color !== 'correct' && b.color !== 'active') b.color = 'default'; });
+                if(op.type === 'swap') {
+                    let bi = this.bars[op.i];
+                    let bj = this.bars[op.j];
+                    if(bi && bj) {
+                        bi.targetX = this.getX(op.j);
+                        bj.targetX = this.getX(op.i);
+                        this.bars[op.i] = bj;
+                        this.bars[op.j] = bi;
+                    }
+                } else if(op.type === 'set') {
+                    let b = this.bars[op.index];
+                    if(b) b.targetValue = op.value;
+                }
+            }
+            // Instantly snap to the target operation without animation
+            snapOp(op) {
+                if(op.type === 'swap') {
+                    let bi = this.bars[op.i];
+                    let bj = this.bars[op.j];
+                    if(bi && bj) {
+                        bi.targetX = this.getX(op.j);
+                        bj.targetX = this.getX(op.i);
+                        bi.x = bi.targetX;
+                        bj.x = bj.targetX;
+                        this.bars[op.i] = bj;
+                        this.bars[op.j] = bi;
+                    }
+                } else if(op.type === 'set') {
+                    let b = this.bars[op.index];
+                    if(b) {
+                        b.targetValue = op.value;
+                        b.value = op.value;
+                    }
+                }
+            }
+            draw() {
+                this.ctx.clearRect(0, 0, this.width, this.height);
+                
+                for(let bar of this.bars) {
+                    // Interpolate
+                    if(Math.abs(bar.targetX - bar.x) < 0.5) bar.x = bar.targetX;
+                    else bar.x += (bar.targetX - bar.x) * 0.2;
+                    
+                    if(Math.abs(bar.targetValue - bar.value) < 0.5) bar.value = bar.targetValue;
+                    else bar.value += (bar.targetValue - bar.value) * 0.2;
+
+                    // Compute Dimensions
+                    const h = (bar.value / 100) * (this.height * 0.75) + (this.height * 0.1);
+                    const y = this.height - h - 10;
+
+                    // Gradient Color
+                    let grad = this.ctx.createLinearGradient(0, this.height, 0, 0);
+                    if(bar.color === 'default') {
+                        grad.addColorStop(0, '#0ea5e9'); // cyan
+                        grad.addColorStop(1, '#60a5fa'); // blue
+                    } else if(bar.color === 'active') { // selected
+                        grad.addColorStop(0, '#f59e0b'); // amber
+                        grad.addColorStop(1, '#fde047'); // yellow
+                    } else if(bar.color === 'correct') { // matched
+                        grad.addColorStop(0, '#10b981'); // emerald
+                        grad.addColorStop(1, '#6ee7b7'); // light green
+                    }
+
+                    // Shadow
+                    this.ctx.shadowColor = 'rgba(0,0,0,0.5)';
+                    this.ctx.shadowBlur = 8;
+                    this.ctx.shadowOffsetY = 4;
+
+                    this.ctx.fillStyle = grad;
+                    this.ctx.beginPath();
+                    this.ctx.roundRect(bar.x, y, this.bw, h, [6, 6, 0, 0]);
+                    this.ctx.fill();
+
+                    // Text
+                    this.ctx.shadowColor = 'transparent';
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = 'bold 16px Inter';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.fillText(Math.round(bar.value), bar.x + this.bw/2, y + 25);
+                }
+            }
+        }
+
+        const leftVis = new Visualizer('leftCanvas');
+        const rightVis = new Visualizer('rightCanvas');
+
+        // Render Loop
+        function renderLoop() {
+            leftVis.draw();
+            rightVis.draw();
+            requestAnimationFrame(renderLoop);
+        }
+        requestAnimationFrame(renderLoop);
+
+        // Game State
+        let state = {
+            isRunning: false,
+            isAnimating: false,
+            mode: 'EasyMode',
+            timeRemaining: 60,
+            timeInterval: null,
+            score: 0,
+            level: 1,
+            array: [],
+            ops: [],
+            currentOpIndex: 0,
+            selected: []
+        };
+
+        const statusMsg = document.getElementById('statusMsg');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const highScoreLabel = document.getElementById('highScoreLabel');
+        const highScoreDisplay = document.getElementById('highScoreDisplay');
+        const leftContainer = document.getElementById('leftContainer');
+
+        let highScores = {
+            'EasyMode': parseInt(localStorage.getItem('sortingMatch_EasyMode')) || 0,
+            'HardMode': parseInt(localStorage.getItem('sortingMatch_HardMode')) || 0
+        };
+
+        function updateHighScoreUI() {
+            highScoreLabel.innerText = state.mode === 'EasyMode' ? 'Easy High' : 'Hard High';
+            highScoreDisplay.innerText = highScores[state.mode];
+        }
+
+        function checkHighScore() {
+            if(state.score > highScores[state.mode]) {
+                highScores[state.mode] = state.score;
+                localStorage.setItem(`sortingMatch_${state.mode}`, state.score);
+                updateHighScoreUI();
+            }
+        }
+        
+        updateHighScoreUI();
+
+        function triggerFlash(el, type) {
+            el.classList.remove('flash-green', 'flash-red');
+            void el.offsetWidth; // Reflow
+            el.classList.add('flash-' + (type === 'correct' ? 'green' : 'red'));
+        }
+
+        function formatTime(s) {
+            if(s <= 0) return "00:00";
+            let mins = Math.floor(s / 60);
+            let secs = s % 60;
+            return (mins < 10 ? "0" : "") + mins + ":" + (secs < 10 ? "0" : "") + secs;
+        }
+
+        function addTime(amount) {
+            if(state.mode !== 'HardMode') return;
+            state.timeRemaining += amount;
+            if(state.timeRemaining < 0) state.timeRemaining = 0;
+            timerDisplay.innerText = formatTime(state.timeRemaining);
+            if(amount > 0) {
+                timerDisplay.classList.add('text-emerald-400');
+                setTimeout(() => timerDisplay.classList.remove('text-emerald-400'), 500);
+            } else if(amount < 0) {
+                timerDisplay.classList.add('text-rose-500');
+                setTimeout(() => timerDisplay.classList.remove('text-rose-500'), 500);
+            }
+        }
+
+        function timerTick() {
+            state.timeRemaining--;
+            timerDisplay.innerText = formatTime(state.timeRemaining);
+            if(state.timeRemaining <= 10) timerDisplay.classList.add('text-rose-500', 'animate-pulse');
+            else timerDisplay.classList.remove('text-rose-500', 'animate-pulse');
+
+            if(state.timeRemaining <= 0) {
+                showGameOver(true);
+            }
+        }
+
+        function generateUniqueArray() {
+            let arr = [];
+            while(arr.length < 10) {
+                let v = Math.floor(Math.random() * 91) + 10;
+                if(!arr.includes(v)) arr.push(v);
+            }
+            return arr;
+        }
+
+        function startGame(keepScore = false) {
+            initAudio();
+            stopBGM(); // Reset track
+            document.getElementById('startBtn').innerText = "RESTART";
+            document.getElementById('startBtn').classList.remove('from-emerald-500', 'to-teal-600');
+            document.getElementById('startBtn').classList.add('from-purple-500', 'to-indigo-600');
+            document.getElementById('stopBtn').classList.remove('hidden');
+
+            state.array = generateUniqueArray();
+            state.currentOpIndex = 0;
+            state.selected = [];
+            state.isAnimating = false;
+            
+            state.mode = document.getElementById('modeSelect').value;
+            
+            if(!keepScore) {
+                state.score = 0;
+                state.level = 1;
+                if(state.mode === 'HardMode') state.timeRemaining = 60;
+                scoreDisplay.innerText = state.score;
+                levelDisplay.innerText = state.level;
+            }
+            
+            clearInterval(state.timeInterval);
+            if(state.mode === 'HardMode') {
+                timerDisplay.innerText = formatTime(state.timeRemaining);
+                timerDisplay.classList.remove('text-slate-500');
+                timerDisplay.classList.add('text-orange-400');
+                state.timeInterval = setInterval(timerTick, 1000);
+            } else {
+                timerDisplay.innerText = "--:--";
+                timerDisplay.classList.remove('text-orange-400');
+                timerDisplay.classList.add('text-slate-500');
+                timerDisplay.classList.remove('text-rose-500', 'animate-pulse');
+            }
+            
+            if(state.mode === 'HardMode') {
+                playBGM();
+            }
+            
+            
+            const algoName = document.getElementById('algoSelect').value;
+            state.ops = getOpsForAlgo(algoName, state.array);
+            
+            leftVis.init(state.array);
+            rightVis.init(state.array);
+            
+            state.isRunning = true;
+            
+            if(state.ops.length > 0) {
+                rightVis.snapOp(state.ops[0]);
+                statusMsg.innerHTML = `Level ${state.level}: <span class="text-cyan-400 font-black">${algoName} Sort</span>. Spot the difference and click!`;
+            } else {
+                showLevelClear(); // Edge case: Array instantly sorted
+            }
+        }
+
+        function stopGame() {
+            state.isRunning = false;
+            state.isAnimating = false;
+            clearInterval(state.timeInterval);
+            document.getElementById('startBtn').innerText = "START GAME";
+            document.getElementById('startBtn').classList.remove('from-purple-500', 'to-indigo-600');
+            document.getElementById('startBtn').classList.add('from-emerald-500', 'to-teal-600');
+            document.getElementById('stopBtn').classList.add('hidden');
+            statusMsg.innerHTML = "Game Stopped.";
+            leftVis.bars.forEach(b => b.color = 'default');
+            rightVis.bars.forEach(b => b.color = 'default');
+            stopBGM();
+        }
+
+        function showGameOver(timeOut = false) {
+            stopBGM();
+            state.isRunning = false;
+            clearInterval(state.timeInterval);
+            let reason = timeOut ? "Time's up!" : "Game Over.";
+            statusMsg.innerHTML = `<span class="text-rose-500 font-bold uppercase animate-pulse">GAME OVER!</span> ${reason} Score: ${state.score}. Restarting...`;
+            setTimeout(() => startGame(false), 2500);
+        }
+
+        function showLevelClear() {
+            stopBGM();
+            playLevelComplete();
+            state.isRunning = false;
+            clearInterval(state.timeInterval);
+            statusMsg.innerHTML = `<span class="text-emerald-400 font-bold uppercase">LEVEL COMPLETE!</span> Array is fully sorted.`;
+            leftVis.bars.forEach(b => b.color = 'correct');
+            rightVis.bars.forEach(b => b.color = 'correct');
+            state.level++;
+            levelDisplay.innerText = state.level;
+            setTimeout(() => startGame(true), 3000);
+        }
+
+        const algoDescriptions = {
+            'Bubble': 'Bubble Sort repeatedly steps through the list, compares adjacent elements and swaps them if they are in the wrong order.',
+            'Selection': 'Selection Sort finds the minimum element from the unsorted part and swaps it with the first unsorted element.',
+            'Insertion': 'Insertion Sort builds the final sorted array one item at a time by swapping the current item backward until it is in the correct position.',
+            'Quick': 'Quick Sort picks a pivot element and partitions the array, swapping elements smaller than the pivot to the left side.',
+            'Merge': 'Merge Sort recursively halves the array, and then merges (overwrites) the sorted halves back together.',
+            'Heap': 'Heap Sort builds a max heap tree and repeatedly swaps the largest element (root) to the end of the array.'
+        };
+        
+        document.getElementById('modeSelect').addEventListener('change', (e) => {
+            document.getElementById('startBtn').innerText = "START GAME";
+            state.mode = e.target.value;
+            updateHighScoreUI();
+        });
+
+        document.getElementById('algoSelect').addEventListener('change', (e) => {
+            document.getElementById('algoDescription').innerText = algoDescriptions[e.target.value];
+        });
+
+        document.getElementById('startBtn').addEventListener('click', () => startGame(false));
+        document.getElementById('stopBtn').addEventListener('click', stopGame);
+
+        // Core Interaction
+        document.getElementById('leftCanvas').addEventListener('mousedown', (e) => {
+            initAudio();
+            if(!state.isRunning || state.isAnimating) return;
+            
+            const rect = leftVis.canvas.getBoundingClientRect();
+            const scaleX = leftVis.canvas.width / rect.width;
+            const x = (e.clientX - rect.left) * scaleX;
+            
+            let clickedIndex = -1;
+            for(let i=0; i<10; i++) {
+                let bx = leftVis.getX(i);
+                if(x >= bx - 5 && x <= bx + leftVis.bw + 5) { 
+                    clickedIndex = i;
+                    break;
+                }
+            }
+            
+            if(clickedIndex !== -1) {
+                let op = state.ops[state.currentOpIndex];
+                let diffIndices = op.type === 'swap' ? [op.i, op.j] : [op.index];
+
+                if(diffIndices.includes(clickedIndex)) {
+                    // Valid click
+                    if(!state.selected.includes(clickedIndex)) {
+                        state.selected.push(clickedIndex);
+                        leftVis.bars[clickedIndex].color = 'active'; 
+                        
+                        if(state.selected.length === diffIndices.length) {
+                            // Solved the step
+                            state.isAnimating = true;
+                            state.selected = [];
+                            diffIndices.forEach(idx => leftVis.bars[idx].color = 'correct');
+                            
+                            playCorrect();
+                            state.score += 50 * state.level;
+                            scoreDisplay.innerText = state.score;
+                            checkHighScore();
+                            triggerFlash(leftContainer, 'correct');
+
+                            // Animate it on left canvas
+                            leftVis.applyOp(op);
+                            if(state.mode === 'HardMode') {
+                                addTime(3); // Bonus time
+                                statusMsg.innerHTML = `Correct! <span class="text-emerald-400 font-bold">+3s Bonus!</span> Animating...`;
+                            } else {
+                                statusMsg.innerHTML = `Correct! Animating step...`;
+                            }
+
+                            setTimeout(() => {
+                                // Once animated, reset colors and check progression
+                                leftVis.bars.forEach(b => b.color = 'default');
+                                state.currentOpIndex++;
+                                
+                                if(state.currentOpIndex >= state.ops.length) {
+                                    showLevelClear();
+                                } else {
+                                    rightVis.snapOp(state.ops[state.currentOpIndex]);
+                                    state.isAnimating = false;
+                                    statusMsg.innerHTML = `Step Solved! Find the next move!`;
+                                }
+                            }, 800); // Wait for easing to complete
+                        } else {
+                            playStep(); // Just selected one of two
+                            statusMsg.innerHTML = `Selected 1 bar... click the other one!`;
+                        }
+                    }
+                } else {
+                    // Mistake!
+                    playWrong();
+                    triggerFlash(leftContainer, 'wrong');
+                    
+                    state.selected.forEach(idx => leftVis.bars[idx].color = 'default');
+                    state.selected = [];
+                    
+                    if(state.mode === 'HardMode') {
+                        addTime(-5);
+                        statusMsg.innerHTML = `<span class="text-rose-400 font-bold uppercase">Incorrect!</span> -5s Penalty!`;
+                    } else {
+                        statusMsg.innerHTML = `<span class="text-rose-400 font-bold uppercase">Incorrect!</span> That bar doesn't change next.`;
+                    }
+                }
+            }
+        });
+        
+        // Initial static render
+        leftVis.init([50, 20, 80, 40, 90, 60, 30, 70, 10, 100]);
+        rightVis.init([50, 20, 80, 40, 90, 60, 30, 70, 10, 100]);
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"path": "../../../Downloads/expression-tree-gen-master"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "CSI105"
+	}
+}

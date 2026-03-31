@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        // function precedence_switchcase(char){
+        //     switch(char){
+        //         case '**' : return 3;
+        //         case '*' : case '/' : return 2;
+        //         case '+' : case '-' : return 1;
+        //         default : return 0;
+        //     }
+        // }
+        function precedence(char){
+            if(char == '**') return 3;
+            if(char == '*' || char == '/') return 2;
+            if(char == '+' || char == '-') return 1;
+            return 0;
+                
+        }
+        function infixTopostfix(expression){
+            console.log("expression"+expression)
+            let stack = [];
+            let postfix = [];
+            // console.log("for loop")
+            // for(let index = 0 ; index < expression.length ; index++){
+            //     let char = expression.charAt(index);
+            //     console.log("character ["+index+"] = "+char);
+            // }
+            console.log("while loop")
+            var index =0;
+            while(index < expression.length){
+                let char = expression.charAt(index);
+                console.log("character ["+index+"] = "+char);
+                if(char.match(/[A-Za-z0-9]/)){
+                    console.log("Found Oparand = ",char);
+                    postfix.push(char)
+                }else if(char == '('){
+                    // console.log("FOUND : ",char,"*** Stack.push('()') Success | ***")
+                    stack.push(char);
+                }else if(char == ')'){
+                    while(stack.length && stack[stack.length-1] !== '('){
+                        postfix.push(stack.pop());
+                    }
+                    stack.pop();
+                }else{
+                    while(stack.length && precedence(stack[stack.length-1]) >= precedence(char)){
+                        postfix.push(stack.pop());
+                    }
+                    stack.push(char);
+                }
+                index++
+            }
+            while(stack.length){
+                postfix.push(stack.pop());
+            }
+            // console.log("do while loop")
+            // var index =0;
+            // do{
+            //     let char = expression.charAt(index);
+            //     console.log("character ["+index+"] = "+char);index++
+            // }while(index < expression.length)
+            return postfix;
+            console.log
+        }
+        console.log(infixTopostfix("A+(B*C)"))
+    </script>
+</body>
+</html>

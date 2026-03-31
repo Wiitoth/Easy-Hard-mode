@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Sorting</title>
+
+<style>
+  body {
+    font-family: sans-serif;
+    text-align: center;
+    background: #0f172a;
+    color: white;
+    font-size: larger;
+  }
+
+  h1 { margin: 20px; }
+
+  #array {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    height: 300px;
+    margin: 20px;
+    gap: 5px;
+  }
+
+  .bar {
+    width: 30px;
+    background: #3b82f6;
+    transition: all 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+  }
+
+  .bar span {
+    font-size: 10px;
+    margin-bottom: 3px;
+  }
+
+  .active { background: #f59e0b; }
+  .swap { background: #ef4444; }
+
+  input {
+    padding: 8px;
+    width: 250px;
+    margin: 10px;
+  }
+
+  button {
+    margin: 5px;
+    padding: 10px 15px;
+    border: none;
+    background: #22c55e;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+.clear-btn {
+  background: #ef4444;
+}
+
+.generate-btn {
+  background: #000000;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Sorting Visualizer</h1>
+
+<input id="inputArray" value="9,3,53,36,47,60,31,23,43,50">
+<button onclick="setArray()">Set Array</button>
+<button onclick="clearArray()"class="clear-btn">Clear</button>
+
+<h3>Steps: <span id="steps">0</span></h3>
+
+<div id="array"></div>
+
+<button onclick="generateArray()"class="generate-btn">Generate</button>
+<button onclick="start('bubble')">Bubble</button>
+<button onclick="start('selection')">Selection</button>
+<button onclick="start('insertion')">Insertion</button>
+<button onclick="start('merge')">Merge</button>
+<button onclick="start('quick')">Quick</button>
+<button onclick="start('shell')">Shell</button>
+
+<script>
+let arr = [];
+let delay = 100;
+let steps = 0;
+
+// update steps
+function updateSteps() {
+  document.getElementById('steps').innerText = steps;
+}
+
+// set array
+function setArray() {
+  const input = document.getElementById('inputArray').value;
+  arr = input.split(',').map(x => parseInt(x.trim())).filter(x => !isNaN(x));
+  render();
+}
+
+// clear (ไม่ลบ input)
+function clearArray() {
+  arr = [];
+  steps = 0;
+  updateSteps();
+  document.getElementById('array').innerHTML = '';
+}
+
+// random
+function generateArray() {
+  arr = [];
+  for (let i = 0; i < 20; i++) {
+    arr.push(Math.floor(Math.random() * 100) + 10);
+  }
+  render();
+}
+
+// render
+function render(highlight = [], swap = []) {
+  const container = document.getElementById('array');
+  container.innerHTML = '';
+
+  arr.forEach((val, idx) => {
+    const bar = document.createElement('div');
+    bar.classList.add('bar');
+
+    if (highlight.includes(idx)) bar.classList.add('active');
+    if (swap.includes(idx)) bar.classList.add('swap');
+
+    bar.style.height = val * 2 + 'px';
+
+    const label = document.createElement('span');
+    label.innerText = val;
+
+    bar.appendChild(label);
+    container.appendChild(bar);
+  });
+}
+
+function sleep(ms) {
+  return new Promise(res => setTimeout(res, ms));
+}
+
+// Bubble
+async function bubbleSort() {
+  for (let i = 0; i < arr.length; i++) {
+    for (let j = 0; j < arr.length - i - 1; j++) {
+      render([j, j+1]); steps++; updateSteps(); await sleep(delay);
+
+      if (arr[j] > arr[j+1]) {
+        render([], [j, j+1]); steps++; updateSteps(); await sleep(delay);
+        [arr[j], arr[j+1]] = [arr[j+1], arr[j]];
+        render();
+      }
+    }
+  }
+}
+
+// Selection
+async function selectionSort() {
+  for (let i = 0; i < arr.length; i++) {
+    let min = i;
+    for (let j = i + 1; j < arr.length; j++) {
+      render([min, j]); steps++; updateSteps(); await sleep(delay);
+      if (arr[j] < arr[min]) min = j;
+    }
+    if (min !== i) {
+      render([], [i, min]); steps++; updateSteps(); await sleep(delay);
+      [arr[i], arr[min]] = [arr[min], arr[i]];
+      render();
+    }
+  }
+}
+
+// Insertion
+async function insertionSort() {
+  for (let i = 1; i < arr.length; i++) {
+    let key = arr[i];
+    let j = i - 1;
+
+    while (j >= 0 && arr[j] > key) {
+      render([j, j+1]); steps++; updateSteps(); await sleep(delay);
+      arr[j+1] = arr[j];
+      j--;
+      render();
+    }
+
+    arr[j+1] = key;
+    render();
+  }
+}
+
+// Merge
+async function mergeSortWrapper() {
+  await mergeSort(0, arr.length - 1);
+}
+
+async function mergeSort(l, r) {
+  if (l >= r) return;
+  let m = Math.floor((l+r)/2);
+  await mergeSort(l, m);
+  await mergeSort(m+1, r);
+  await merge(l, m, r);
+}
+
+async function merge(l, m, r) {
+  let left = arr.slice(l, m+1);
+  let right = arr.slice(m+1, r+1);
+  let i=0, j=0, k=l;
+
+  while (i < left.length && j < right.length) {
+    render([k]); steps++; updateSteps(); await sleep(delay);
+    arr[k++] = (left[i] <= right[j]) ? left[i++] : right[j++];
+    render();
+  }
+
+  while (i < left.length) {
+    arr[k++] = left[i++];
+    render(); await sleep(delay);
+  }
+
+  while (j < right.length) {
+    arr[k++] = right[j++];
+    render(); await sleep(delay);
+  }
+}
+
+// Quick
+async function quickSortWrapper() {
+  await quickSort(0, arr.length - 1);
+}
+
+async function quickSort(lo, hi) {
+  if (lo < hi) {
+    let p = await partition(lo, hi);
+    await quickSort(lo, p-1);
+    await quickSort(p+1, hi);
+  }
+}
+
+async function partition(lo, hi) {
+  let pivot = arr[hi];
+  let i = lo - 1;
+
+  for (let j = lo; j < hi; j++) {
+    render([j, hi]); steps++; updateSteps(); await sleep(delay);
+
+    if (arr[j] < pivot) {
+      i++;
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+      render([], [i, j]); steps++; updateSteps(); await sleep(delay);
+    }
+  }
+
+  [arr[i+1], arr[hi]] = [arr[hi], arr[i+1]];
+  render([], [i+1, hi]); steps++; updateSteps(); await sleep(delay);
+
+  return i + 1;
+}
+
+// Shell
+async function shellSort() {
+  for (let gap = Math.floor(arr.length/2); gap > 0; gap = Math.floor(gap/2)) {
+    for (let i = gap; i < arr.length; i++) {
+      let temp = arr[i];
+      let j = i;
+
+      while (j >= gap && arr[j-gap] > temp) {
+        render([j, j-gap]); steps++; updateSteps(); await sleep(delay);
+        arr[j] = arr[j-gap];
+        j -= gap;
+        render();
+      }
+
+      arr[j] = temp;
+      render(); await sleep(delay);
+    }
+  }
+}
+
+// start
+async function start(type) {
+  steps = 0;
+  updateSteps();
+
+  if (type === 'bubble') await bubbleSort();
+  if (type === 'selection') await selectionSort();
+  if (type === 'insertion') await insertionSort();
+  if (type === 'merge') await mergeSortWrapper();
+  if (type === 'quick') await quickSortWrapper();
+  if (type === 'shell') await shellSort();
+}
+
+generateArray();
+</script>
+
+</body>
+</html>

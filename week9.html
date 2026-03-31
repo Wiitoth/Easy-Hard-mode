@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script>
+        let list = [5,9,2,7,4,1,3,8]
+        list.splice(1,3)
+        console.log(list)
+        let listASC = [];
+        function foundMaxMin(list){
+            if(list.length){
+                let result = {'indexmax': 0, 'max':list[0],'indexmin':0,'min':list[0]};
+                let max = min = list[0];
+                for(index = 0;index < list.length;index++){
+                    if(result.max < list[index]){
+                        result.max = list[result.indexmax = index]; 
+                    }
+                    if(result.mix > list[index]){
+                        result.min = list[result.indexmix = index];
+                    }
+                    
+                }
+                return list;    
+            }else return "Empty!"
+        }
+        function selecSort(list,sort = "ASC"){
+            let listSort = [];
+            console.log(list)
+            return listSort;
+            if(sort == "ASC"){
+                // console.log(sort);
+            }else if(sort =="DESC"){
+                // console.log(sort);
+            }else console.log("Error")
+            return listSort;
+        }
+        console.log(selecSort(list,"ASC"))
+        // console.log(list);
+        // console.log("minNumber in [] :"+foundMaxMin(list).max);
+        // console.log("minNumber in [] :"+foundMaxMin(list).min);
+        
+        // --------------------------------------------------------
+        // function foundMax(list){
+        //     if(list.length){
+        //         let max = list[0];
+        //         for(index = 0;index < list.length;index++){
+        //             if(max < list[index+1]){
+        //                 max = list[index];
+        //             }
+        //         }
+        //         return list;    
+        //     }else 
+        //         return "Empty!"
+        // }
+        // console.log("minNumber in []"+foundMin(list).toString());
+        // function foundMin(list){
+        //     if(list.length){
+        //         let min = list[0];
+        //         // index++
+        //         for(index = 0;index < list.length;index++){
+        //             if(min > list[index+1]){
+        //                 // console.log(min + '<' + list[index]);
+        //                 min = list[index];
+        //                 // console.log("update min value")
+        //             }
+        //         }
+        //         return list;    
+        //     }else 
+        //         return "Empty!"
+        // }
+        // ------------------------------
+        // // sorting ASC (MIN To MAX) || 
+        // let x = 50 ,y = 30;
+        // let max = x,min = x
+        // if(x > y){ 
+        //     console.log("x < y");
+        //     max = x,mim = y;
+        // }else if(x < y){
+        //     console.log("x > y");
+        //     min = x,max = y
+        // }else{
+        //     console.log("x = y");
+        //     max = mix = x
+        // }
+        // console.log("MAX = "+max);
+        // console.log("MIN = "+min);
+    </script>
+</body>
+</html>

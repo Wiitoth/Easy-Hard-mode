@@ -1,0 +1,124 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+    background-color: rgb(68, 68, 68);
+}
+.content{
+    font-size: 60px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 40px;
+    margin: 40px;
+    border-radius: 16px;
+}
+.content h1{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 80px;
+    font-weight: bold;
+}
+
+.num {
+    display: flex;
+    align-items: center;   /* จัดให้สูงเท่ากันและตรงแนว */
+    gap: 10px;             /* ระยะห่างระหว่างองค์ประกอบ */
+}
+
+label {
+    font-size: 60px;
+}
+
+.num button {
+    font-size: 30px;
+    padding: 0 8px;
+}
+
+.cal button{
+    font-size: 30px;
+    padding: 0 8px;
+}
+
+.reset button{
+    font-size: 30px;
+    padding: 0 8px;
+}
+
+button {
+  width: 120px;      /* กำหนดความกว้างเท่ากัน */
+  height: 45px;      /* กำหนดความสูงเท่ากัน */
+  font-size: 18px;
+  border-radius: 10px;
+  cursor: pointer;
+  background-color: aquamarine;
+}
+#numberinput {
+  width: 260px;      /* ความกว้าง */
+  height: 42px;      /* ความสูง */
+  font-size: 10px;   /* ขนาดตัวหนังสือ */
+  padding: 0 10px;   /* ระยะขอบด้านใน */
+  border-radius: 10px;
+}
+
+
+.cal {
+  display: flex;
+  align-items: center;   /* สำคัญ */
+  gap: 12px;
+}
+
+/* ลบ margin ของ p ไม่ให้ดันปุ่มลง */
+.cal p {
+  margin: 0;
+  font-size: 60px;
+}
+/* กล่องพื้นหลังสีฟ้า */
+.content {
+  padding: 20px;
+}
+
+/* ดันปุ่ม "เพิ่ม" ไปขวาสุด */
+.num .btn-add {
+  margin-left: auto;
+}
+
+/* แถวตัวเลขที่เพิ่ม */
+.cal {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  
+}
+
+/* ลบระยะ p */
+.cal p {
+  margin: 0;
+}
+
+/* ดันปุ่ม "คำนวณ" ไปขวาสุด */
+.cal .btn-cal {
+  margin-left: auto;
+}
+
+/* แถวผลลัพธ์ + รีเซ็ต */
+.reset {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* ดันปุ่มรีเซ็ตไปขวาสุด (ถ้าต้องการ) */
+.reset .btn-re {
+  margin-left: auto;
+}

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+    index = 0;
+    A = [[1, 0, 0, 1, 1, 1, 0, 0],[1, 0, 0, 0, 1, 1, 1, 1]];
+    B = [[0, 0, 0, 0, 0, 0, 0, 0],[1, 1, 1, 1, 1, 1, 1, 1]];
+    C = andList(A, B);
+    function andList(x = [], y = []) {
+        list = [];
+        for (i = 0; i < x.length; i++) { //ดึงข้อมูลแต่ละแถว loopดึงแถว
+            console.log("x[" + i + "] =", x[i]);
+            console.log("y[" + i + "] =", y[i]);
+            for (j = 0; j < x[i].length; j++) { //ดึงข้อมูลแต่ละตัว loopดึงค่า
+                console.log(
+                    "Result:[" + i + "][" + j + "] = " +
+                    (Number(x[i][j]) + Number(y[i][j]))
+                );
+            }
+        }
+        return list;
+    }
+</script>
+</body>
+</html>

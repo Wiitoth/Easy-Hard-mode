@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Management LinkedList (Multiple Lists)</title>
+
+<style>
+    
+body { font-family: Arial; padding: 20px; }
+input, select, button { padding: 5px; margin: 5px; }
+
+#display {
+    margin-top: 20px;
+    font-size: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.node {
+    background: #4CAF50;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 5px;
+}
+
+.arrow {
+    font-size: 22px;
+    margin: 0 5px;
+}
+
+.null {
+    background: red;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin: 5px;
+}
+button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: 0.3s;
+    margin: 5px;
+    background: #ffffff;
+    color: #4a4a4a;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+button:hover {
+    transform: translateY(-2px);
+    background: #4c93af;
+    color: white;
+}
+</style>
+</head>
+<body>
+    <h2>Array List</h2>
+    <input type="text" id="listName" placeholder="New List">
+    <button onclick="createList()">Create List</button>
+    <br>
+    <select id="listSelect"></select>
+    <button onclick="deleteList()">Delete List</button>
+    <br>
+    Data:
+    <input type="number" id="dataInput">
+    Index:
+    <input type="number" id="indexInput">
+    <br>
+    <button onclick="operate('push')">push</button>
+    <button onclick="operate('pop')">pop</button>
+    <button onclick="operate('unshift')">unshift</button>
+    <button onclick="operate('shift')">shift</button>
+    <button onclick="operate('get')">get</button>
+    <button onclick="operate('set')">set</button>
+    <button onclick="operate('insert')">insert</button>
+    <button onclick="operate('remove')">remove</button>
+    <button onclick="operate('clear')">clear</button>
+    <h3 id="result"></h3>
+    <h3>Linked List Structure</h3>
+    <div id="display"></div>
+<script>
+    class Node {
+        constructor(value){
+            this.value = value;
+            this.next = null;
+        }
+    }
+    class LinkedList {
+        constructor(){
+            this.head = null;
+            this.tail = null;
+            this.length = 0;
+        }
+    push(value){
+        const newNode = new Node(value);
+        if(!this.head){
+            this.head = this.tail = newNode;
+        } else {
+            this.tail.next = newNode;
+            this.tail = newNode;
+        }
+        this.length++;
+    }
+    pop(){
+        if(!this.head) return undefined;
+        let temp = this.head;
+        let prev = this.head;
+        while(temp.next){
+            prev = temp;
+            temp = temp.next;
+        }
+        if(this.head === this.tail){
+            this.head = this.tail = null;
+        } else {
+            this.tail = prev;
+            this.tail.next = null;
+        }
+        this.length--;
+        return temp;
+    }
+    unshift(value){
+        const newNode = new Node(value);
+        if(!this.head){
+            this.head = this.tail = newNode;
+        } else {
+            newNode.next = this.head;
+            this.head = newNode;
+        }
+        this.length++;
+    }
+    shift(){
+        if(!this.head) return undefined;
+            const temp = this.head;
+            this.head = this.head.next;
+        if(!this.head) this.tail = null;
+            this.length--;
+        return temp;
+    }
+    get(index){
+        if(index < 0 || index >= this.length) return undefined;
+            let temp = this.head;
+        for(let i=0;i<index;i++) temp = temp.next;
+        return temp;
+    }
+    set(index,value){
+        const node = this.get(index);
+        if(node){
+            node.value = value;
+            return true;
+        }
+        return false;
+    }
+    insert(index,value){
+        if(index < 0 || index > this.length) return false;
+        if(index === 0){ this.unshift(value); return true;}
+        if(index === this.length){ this.push(value); return true;}
+        const newNode = new Node(value);
+        const prev = this.get(index-1);
+        newNode.next = prev.next;
+        prev.next = newNode;
+        this.length++;
+        return true;
+    }
+    remove(index){
+        if(index < 0 || index >= this.length) return undefined;
+        if(index === 0) return this.shift();
+        if(index === this.length-1) return this.pop();
+        const prev = this.get(index-1);
+        const temp = prev.next;
+        prev.next = temp.next;
+        this.length--;
+        return temp;
+    }
+    clear(){
+        this.head = null;
+        this.tail = null;
+        this.length = 0;
+        }
+    }
+    let lists = {};
+    function createList(){
+        const name = document.getElementById("listName").value;
+        if(!name || lists[name]) return;
+        lists[name] = new LinkedList();
+        updateSelect();
+    }
+    function deleteList(){
+        const name = document.getElementById("listSelect").value;
+        delete lists[name];
+        updateSelect();
+        render();
+    }
+    function updateSelect(){
+        const select = document.getElementById("listSelect");
+        select.innerHTML="";
+        for(let key in lists){
+        const option = document.createElement("option");
+        option.value = key;
+        option.textContent = key;
+        select.appendChild(option);
+        }
+    }
+    function operate(type){
+        const name = document.getElementById("listSelect").value;
+        if(!lists[name]) return;
+        const list = lists[name];
+        const data = Number(document.getElementById("dataInput").value);
+        const index = Number(document.getElementById("indexInput").value);
+        let result;
+    switch(type){
+        case "push": list.push(data); break;
+        case "pop": result = list.pop(); break;
+        case "unshift": list.unshift(data); break;
+        case "shift": result = list.shift(); break;
+        case "get": result = list.get(index); break;
+        case "set": result = list.set(index,data); break;
+        case "insert": result = list.insert(index,data); break;
+        case "remove": result = list.remove(index); break;
+        case "clear":
+            list.clear();
+            result = "List Cleared";
+            break;
+        }
+    document.getElementById("result").innerText =
+        result && result.value !== undefined
+            ? "Result: " + result.value
+            : result !== undefined
+            ? "Result: " + result
+            : "";
+        render();
+    }
+    function render(){
+        const name = document.getElementById("listSelect").value;
+        const display = document.getElementById("display");
+        display.innerHTML="";
+        if(!lists[name]) return;
+            let temp = lists[name].head;
+        while(temp){
+            const node = document.createElement("div");
+            node.className="node";
+            node.innerText=temp.value;
+            display.appendChild(node);
+        if(temp.next){
+            const arrow=document.createElement("div");
+            arrow.className="arrow";
+            arrow.innerText="→";
+            display.appendChild(arrow);
+        }
+        temp=temp.next;
+        }
+        const nullNode=document.createElement("div");
+        nullNode.className="null";
+        nullNode.innerText="null";
+        display.appendChild(nullNode);
+    }
+    </script>
+</body>
+</html>
